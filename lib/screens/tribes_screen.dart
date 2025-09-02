@@ -24,7 +24,7 @@ class _TribesScreenState extends State<TribesScreen>
       color: const Color(0xFFD2691E), // Saddle brown
       accentColor: const Color(0xFFFF8C00), // Dark orange
       pattern: 'assets/patterns/manobo_pattern.png',
-      categories: ['Instruments', 'Clothing', 'Rituals', 'Stories', 'Art'],
+      categories: ['Music', 'Video', 'Artifacts', 'Image'],
     ),
     TribeData(
       name: 'Mansaka',
@@ -32,7 +32,7 @@ class _TribesScreenState extends State<TribesScreen>
       color: const Color(0xFF8B4513), // Saddle brown
       accentColor: const Color(0xFFCD853F), // Peru
       pattern: 'assets/patterns/mansaka_pattern.png',
-      categories: ['Instruments', 'Textiles', 'Farming', 'Ceremonies', 'Crafts'],
+      categories: ['Music', 'Video', 'Artifacts', 'Image'],
     ),
     TribeData(
       name: 'Mandaya',
@@ -40,7 +40,7 @@ class _TribesScreenState extends State<TribesScreen>
       color: const Color(0xFFA0522D), // Sienna
       accentColor: const Color(0xFFDEB887), // Burlywood
       pattern: 'assets/patterns/mandaya_pattern.png',
-      categories: ['Music', 'Dance', 'Instruments', 'Festivals', 'Costumes'],
+      categories: ['Music', 'Video', 'Artifacts', 'Image'],
     ),
   ];
 
@@ -471,27 +471,14 @@ class _TribesScreenState extends State<TribesScreen>
 
   IconData _getCategoryIcon(String category) {
     switch (category.toLowerCase()) {
-      case 'instruments':
       case 'music':
         return Icons.music_note;
-      case 'clothing':
-      case 'textiles':
-      case 'costumes':
-        return Icons.checkroom;
-      case 'rituals':
-      case 'ceremonies':
-        return Icons.auto_awesome;
-      case 'stories':
-        return Icons.menu_book;
-      case 'art':
-      case 'crafts':
-        return Icons.brush;
-      case 'dance':
-        return Icons.self_improvement;
-      case 'farming':
-        return Icons.agriculture;
-      case 'festivals':
-        return Icons.celebration;
+      case 'video':
+        return Icons.videocam;
+      case 'artifacts':
+        return Icons.museum;
+      case 'image':
+        return Icons.image;
       default:
         return Icons.category;
     }
@@ -552,7 +539,7 @@ class _TribesScreenState extends State<TribesScreen>
             const SizedBox(height: 16),
             
             Text(
-              'Explore the rich $category heritage of the ${tribe.name} tribe. Discover traditional practices, artifacts, and cultural significance.',
+              'Explore the rich $category collection of the ${tribe.name} tribe. Discover traditional practices, cultural heritage, and historical significance.',
               style: TextStyle(
                 color: Colors.white.withOpacity(0.9),
                 fontSize: 16,
