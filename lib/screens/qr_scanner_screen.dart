@@ -1,0 +1,363 @@
+import 'package:flutter/material.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
+import '../utils/app_colors.dart';
+
+class QRScannerScreen extends StatefulWidget {
+  const QRScannerScreen({super.key});
+
+  @override
+  State<QRScannerScreen> createState() => _QRScannerScreenState();
+}
+
+class _QRScannerScreenState extends State<QRScannerScreen> {
+  MobileScannerController cameraController = MobileScannerController(
+    detectionSpeed: DetectionSpeed.noDuplicates,
+    facing: CameraFacing.back,
+    torchEnabled: false,
+  );
+  
+  String? barcodeResult;
+  bool isScanning = true;
+  String? errorMessage;
+  bool torchEnabled = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the scanner when the screen loads
+    cameraController.start();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('QR Code Scanner'),
+        centerTitle: true,
+        actions: [
+          // Toggle flashlight
+          IconButton(
+            icon: Icon(
+              torchEnabled ? Icons.flash_on : Icons.flash_off,
+              color: torchEnabled ? Colors.yellow : Colors.grey,
+            ),
+            onPressed: () async {
+              try {
+                await cameraController.toggleTorch();
+                setState(() {
+                  torchEnabled = !torchEnabled;
+                });
+              } catch (e) {
+                print('Error toggling torch: $e');
+              }
+            },
+          ),
+          // Switch camera
+          IconButton(
+            icon: const Icon(Icons.camera_front),
+            onPressed: () async {
+              try {
+                await cameraController.switchCamera();
+              } catch (e) {
+                print('Error switching camera: $e');
+              }
+            },
+          ),
+        ],
+      ),
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            flex: 4,
+            child: Stack(
+              children: [
+                // Camera preview
+                MobileScanner(
+                  controller: cameraController,
+                  onDetect: (capture) {
+                    if (!isScanning) return;
+                    
+                    final List<Barcode> barcodes = capture.barcodes;
+                    if (barcodes.isNotEmpty) {
+                      final barcode = barcodes.first;
+                      setState(() {
+                        barcodeResult = barcode.rawValue;
+                        isScanning = false;
+                        errorMessage = null;
+                      });
+                      
+                      // Show success dialog
+                      _showResultDialog(barcode.rawValue ?? 'No data');
+                    }
+                  },
+                ),
+                
+                // Scanning overlay
+                if (isScanning) _buildScanningOverlay(),
+              ],
+            ),
+          ),
+          
+          // Bottom section with result and controls
+          Expanded(
+            flex: 1,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16.0),
+              color: AppColors.sparklingSnow,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (barcodeResult != null) ...[
+                    const Icon(
+                      Icons.check_circle,
+                      color: Colors.green,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'QR Code Scanned Successfully!',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: _resetScanner,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.terrestrial,
+                        foregroundColor: AppColors.sparklingSnow,
+                      ),
+                      child: const Text('Scan Another'),
+                    ),
+                  ] else if (errorMessage != null) ...[
+                    const Icon(
+                      Icons.error_outline,
+                      color: Colors.red,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                      textAlign: TextAlign.center,
+                    ),
+                  ] else ...[
+                    const Icon(
+                      Icons.qr_code_scanner,
+                      color: AppColors.terrestrial,
+                      size: 32,
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Point your camera at a QR code',
+                      style: TextStyle(
+                        color: AppColors.lavaStone,
+                        fontSize: 16,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildScanningOverlay() {
+    return Container(
+      decoration: const ShapeDecoration(
+        shape: QrScannerOverlayShape(
+          borderColor: AppColors.terrestrial,
+          borderRadius: 10,
+          borderLength: 30,
+          borderWidth: 10,
+          cutOutSize: 250,
+        ),
+      ),
+    );
+  }
+
+  void _showResultDialog(String result) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('QR Code Result'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.qr_code,
+                size: 64,
+                color: AppColors.terrestrial,
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.candiedSnow,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppColors.murmur),
+                ),
+                child: SelectableText(
+                  result,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _resetScanner();
+              },
+              child: const Text('Scan Another'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop(); // Go back to previous screen
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.terrestrial,
+                foregroundColor: AppColors.sparklingSnow,
+              ),
+              child: const Text('Done'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _resetScanner() {
+    setState(() {
+      barcodeResult = null;
+      isScanning = true;
+      errorMessage = null;
+    });
+  }
+
+  @override
+  void dispose() {
+    cameraController.dispose();
+    super.dispose();
+  }
+}
+
+// Custom overlay shape for QR scanner
+class QrScannerOverlayShape extends ShapeBorder {
+  const QrScannerOverlayShape({
+    this.borderColor = Colors.red,
+    this.borderWidth = 3.0,
+    this.overlayColor = const Color.fromRGBO(0, 0, 0, 80),
+    this.borderRadius = 0,
+    this.borderLength = 40,
+    this.cutOutSize = 250,
+  });
+
+  final Color borderColor;
+  final double borderWidth;
+  final Color overlayColor;
+  final double borderRadius;
+  final double borderLength;
+  final double cutOutSize;
+
+  @override
+  EdgeInsetsGeometry get dimensions => const EdgeInsets.all(10);
+
+  @override
+  Path getInnerPath(Rect rect, {TextDirection? textDirection}) {
+    return Path()
+      ..fillType = PathFillType.evenOdd
+      ..addPath(getOuterPath(rect), Offset.zero);
+  }
+
+  @override
+  Path getOuterPath(Rect rect, {TextDirection? textDirection}) {
+    Path getLeftTopPath(Rect rect) {
+      return Path()
+        ..moveTo(rect.left, rect.bottom)
+        ..lineTo(rect.left, rect.top + borderRadius)
+        ..quadraticBezierTo(rect.left, rect.top, rect.left + borderRadius, rect.top)
+        ..lineTo(rect.right, rect.top);
+    }
+
+    return getLeftTopPath(rect)
+      ..lineTo(rect.right, rect.bottom)
+      ..lineTo(rect.left, rect.bottom)
+      ..lineTo(rect.left, rect.top);
+  }
+
+  @override
+  void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
+    final width = rect.width;
+    final height = rect.height;
+    final cutOutWidth = cutOutSize < width ? cutOutSize : width - borderWidth;
+    final cutOutHeight = cutOutSize < height ? cutOutSize : height - borderWidth;
+
+    final backgroundPath = Path()
+      ..addRect(rect)
+      ..addRRect(
+        RRect.fromRectAndRadius(
+          Rect.fromCenter(
+            center: rect.center,
+            width: cutOutWidth,
+            height: cutOutHeight,
+          ),
+          Radius.circular(borderRadius),
+        ),
+      )
+      ..fillType = PathFillType.evenOdd;
+    
+    final backgroundPaint = Paint()
+      ..color = overlayColor
+      ..style = PaintingStyle.fill;
+    
+    canvas.drawPath(backgroundPath, backgroundPaint);
+
+    // Draw the corners
+    final borderPaint = Paint()
+      ..color = borderColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = borderWidth;
+
+    final path = Path()
+      ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
+      ..lineTo(rect.center.dx - cutOutWidth / 2 + borderLength, rect.center.dy - cutOutHeight / 2)
+      ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
+      ..lineTo(rect.center.dx - cutOutWidth / 2, rect.center.dy - cutOutHeight / 2 + borderLength)
+      ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
+      ..lineTo(rect.center.dx + cutOutWidth / 2 - borderLength, rect.center.dy - cutOutHeight / 2)
+      ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
+      ..lineTo(rect.center.dx + cutOutWidth / 2, rect.center.dy - cutOutHeight / 2 + borderLength)
+      ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
+      ..lineTo(rect.center.dx - cutOutWidth / 2 + borderLength, rect.center.dy + cutOutHeight / 2)
+      ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
+      ..lineTo(rect.center.dx - cutOutWidth / 2, rect.center.dy + cutOutHeight / 2 - borderLength)
+      ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
+      ..lineTo(rect.center.dx + cutOutWidth / 2 - borderLength, rect.center.dy + cutOutHeight / 2)
+      ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
+      ..lineTo(rect.center.dx + cutOutWidth / 2, rect.center.dy + cutOutHeight / 2 - borderLength);
+
+    canvas.drawPath(path, borderPaint);
+  }
+
+  @override
+  ShapeBorder scale(double t) {
+    return QrScannerOverlayShape(
+      borderColor: borderColor,
+      borderWidth: borderWidth,
+      overlayColor: overlayColor,
+    );
+  }
+}

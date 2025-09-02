@@ -1,0 +1,26 @@
+name: huni_sa_tribu
+description: A digital museum platform for indigenous music and culture
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  mobile_scanner: ^7.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  
+  # TODO: Add actual assets when available
+  # assets:
+  #   - assets/images/
+  #   - assets/audio/
+  #   - assets/videos/
