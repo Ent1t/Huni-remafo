@@ -237,18 +237,17 @@ class _TribesScreenState extends State<TribesScreen>
     );
   }
 
-  Widget _buildTribeCard(TribeData tribe, int index) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        setState(() {
-          selectedTribe = tribe.name;
-        });
-        _fadeController.reset();
-        _slideController.reset();
-        _fadeController.forward();
-        _slideController.forward();
-      },
+Widget _buildTribeCard(TribeData tribe, int index) {
+  return GestureDetector(
+    onTap: () {                           
+      HapticFeedback.mediumImpact();
+      Navigator.push(                     
+        context,
+        MaterialPageRoute(
+          builder: (context) => TribeDetailsScreen(tribe: tribe),
+        ),
+      );
+    },          
       child: Container(
         height: 180,
         decoration: BoxDecoration(
