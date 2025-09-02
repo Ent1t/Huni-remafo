@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'tribe_details_screen.dart';
 
 class TribesScreen extends StatefulWidget {
   const TribesScreen({super.key});
