@@ -96,31 +96,45 @@ class _HomeScreenState extends State<HomeScreen>
             // Floating particles effect
             _buildFloatingParticles(),
             
-            // Main content
+            // Main content - FIXED OVERFLOW
             SafeArea(
-              child: Column(
-                children: [
-                  // App title with tribal styling
-                  _buildTribalHeader(),
-                  
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Main QR scanner button
-                        _buildMainQRButton(context),
-                        
-                        const SizedBox(height: 40),
-                        
-                        // Subtitle with cultural context
-                        _buildSubtitle(),
-                      ],
-                    ),
+              child: SingleChildScrollView(
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                    minHeight: MediaQuery.of(context).size.height - 
+                              MediaQuery.of(context).padding.top - 
+                              MediaQuery.of(context).padding.bottom - 70, // Bottom nav height
                   ),
-                  
-                  // Bottom navigation hint
-                  _buildBottomHint(),
-                ],
+                  child: Column(
+                    children: [
+                      // App title with tribal styling
+                      _buildTribalHeader(),
+                      
+                      // Main content area
+                      Expanded(
+                        flex: 0, // Don't expand infinitely
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            // Main QR scanner button
+                            _buildMainQRButton(context),
+                            
+                            const SizedBox(height: 30), // Reduced spacing
+                            
+                            // Subtitle with cultural context
+                            _buildSubtitle(),
+                          ],
+                        ),
+                      ),
+                      
+                      // Bottom navigation hint - FIXED POSITIONING
+                      _buildBottomHint(),
+                      
+                      // Add some bottom padding for the bottom nav
+                      const SizedBox(height: 20),
+                    ],
+                  ),
+                ),
               ),
             ),
           ],
@@ -149,10 +163,10 @@ class _HomeScreenState extends State<HomeScreen>
         animation: _floatAnimation,
         builder: (context, child) {
           return Stack(
-            children: List.generate(8, (index) {
+            children: List.generate(6, (index) { // Reduced from 8
               return Positioned(
-                left: (index * 50.0) % MediaQuery.of(context).size.width,
-                top: 100 + (index * 80.0) + _floatAnimation.value,
+                left: (index * 60.0) % MediaQuery.of(context).size.width,
+                top: 100 + (index * 100.0) + _floatAnimation.value,
                 child: Opacity(
                   opacity: 0.3,
                   child: Container(
@@ -180,7 +194,7 @@ class _HomeScreenState extends State<HomeScreen>
           // Decorative tribal line
           Container(
             height: 3,
-            width: 150,
+            width: 120, // Reduced width
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
@@ -193,46 +207,49 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 16), // Reduced spacing
           
-          // App title
-          ShaderMask(
-            shaderCallback: (bounds) => const LinearGradient(
-              colors: [
-                Color(0xFFD4AF37),
-                Color(0xFFFFD700),
-                Color(0xFFB8860B),
-              ],
-            ).createShader(bounds),
-            child: const Text(
-              'HUNI SA TRIBU',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 3,
-                color: Colors.white,
+          // App title - RESPONSIVE TEXT SIZE
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: ShaderMask(
+              shaderCallback: (bounds) => const LinearGradient(
+                colors: [
+                  Color(0xFFD4AF37),
+                  Color(0xFFFFD700),
+                  Color(0xFFB8860B),
+                ],
+              ).createShader(bounds),
+              child: const Text(
+                'HUNI SA TRIBU',
+                style: TextStyle(
+                  fontSize: 28, // Reduced from 32
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
           
-          const SizedBox(height: 8),
+          const SizedBox(height: 6), // Reduced spacing
           
           const Text(
             'Cultural Heritage Museum',
             style: TextStyle(
-              fontSize: 14,
+              fontSize: 12, // Reduced from 14
               color: Color(0xFFB8B8B8),
-              letterSpacing: 2,
+              letterSpacing: 1.5,
               fontWeight: FontWeight.w300,
             ),
           ),
           
-          const SizedBox(height: 20),
+          const SizedBox(height: 16), // Reduced spacing
           
           // Decorative tribal line
           Container(
             height: 3,
-            width: 150,
+            width: 120, // Reduced width
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
@@ -279,8 +296,8 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
             child: Container(
-              width: 280,
-              height: 280,
+              width: 240, // Reduced from 280
+              height: 240, // Reduced from 280
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -293,13 +310,13 @@ class _HomeScreenState extends State<HomeScreen>
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFD4AF37).withOpacity(0.3),
-                    blurRadius: 30,
-                    spreadRadius: 5,
+                    blurRadius: 25, // Reduced shadow
+                    spreadRadius: 4,
                   ),
                 ],
               ),
               child: Container(
-                margin: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(18), // Reduced margin
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF2D5A3D).withOpacity(0.9),
@@ -313,26 +330,26 @@ class _HomeScreenState extends State<HomeScreen>
                   children: [
                     Icon(
                       Icons.qr_code_scanner,
-                      size: 80,
+                      size: 70, // Reduced from 80
                       color: Color(0xFFD4AF37),
                     ),
-                    SizedBox(height: 20),
+                    SizedBox(height: 16), // Reduced spacing
                     Text(
                       'SCAN',
                       style: TextStyle(
                         color: Color(0xFFD4AF37),
-                        fontSize: 28,
+                        fontSize: 24, // Reduced from 28
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 4,
+                        letterSpacing: 3,
                       ),
                     ),
-                    SizedBox(height: 8),
+                    SizedBox(height: 6), // Reduced spacing
                     Text(
                       'QR CODE',
                       style: TextStyle(
                         color: Color(0xFFB8B8B8),
-                        fontSize: 16,
-                        letterSpacing: 2,
+                        fontSize: 14, // Reduced from 16
+                        letterSpacing: 1.5,
                       ),
                     ),
                   ],
@@ -347,43 +364,43 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildSubtitle() {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 40),
+      padding: const EdgeInsets.symmetric(horizontal: 30), // Reduced padding
       child: Column(
         children: [
           const Text(
             'Discover Indigenous Heritage',
             style: TextStyle(
               color: Color(0xFFD4AF37),
-              fontSize: 20,
+              fontSize: 18, // Reduced from 20
               fontWeight: FontWeight.w600,
-              letterSpacing: 1,
+              letterSpacing: 0.8,
             ),
             textAlign: TextAlign.center,
           ),
           
-          const SizedBox(height: 16),
+          const SizedBox(height: 12), // Reduced spacing
           
           const Text(
             'Scan QR codes on museum exhibits to explore\nthe rich culture of indigenous tribes',
             style: TextStyle(
               color: Color(0xFFB8B8B8),
-              fontSize: 16,
-              height: 1.5,
-              letterSpacing: 0.5,
+              fontSize: 14, // Reduced from 16
+              height: 1.4,
+              letterSpacing: 0.3,
             ),
             textAlign: TextAlign.center,
           ),
           
-          const SizedBox(height: 30),
+          const SizedBox(height: 20), // Reduced spacing
           
           // Decorative dots
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 4),
-                width: 8,
-                height: 8,
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: 6, // Reduced size
+                height: 6,
                 decoration: BoxDecoration(
                   color: const Color(0xFFD4AF37).withOpacity(0.6),
                   shape: BoxShape.circle,
@@ -398,39 +415,39 @@ class _HomeScreenState extends State<HomeScreen>
 
   Widget _buildBottomHint() {
     return Padding(
-      padding: const EdgeInsets.all(30),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2D5A3D).withOpacity(0.8),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFD4AF37).withOpacity(0.3),
-                width: 1,
+      padding: const EdgeInsets.symmetric(horizontal: 20), // Removed vertical padding
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), // Reduced padding
+        decoration: BoxDecoration(
+          color: const Color(0xFF2D5A3D).withOpacity(0.8),
+          borderRadius: BorderRadius.circular(16), // Reduced radius
+          border: Border.all(
+            color: const Color(0xFFD4AF37).withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.swipe_up,
+              color: Color(0xFFD4AF37),
+              size: 18, // Reduced size
+            ),
+            SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                'Explore more in Tribes section',
+                style: TextStyle(
+                  color: Color(0xFFB8B8B8),
+                  fontSize: 12, // Reduced from 14
+                ),
+                overflow: TextOverflow.ellipsis,
               ),
             ),
-            child: const Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  Icons.swipe_up,
-                  color: Color(0xFFD4AF37),
-                  size: 20,
-                ),
-                SizedBox(width: 8),
-                Text(
-                  'Explore more in Tribes section',
-                  style: TextStyle(
-                    color: Color(0xFFB8B8B8),
-                    fontSize: 14,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -445,8 +462,8 @@ class TribalPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFD4AF37).withOpacity(0.1)
-      ..strokeWidth = 2
+      ..color = const Color(0xFFD4AF37).withOpacity(0.08) // Reduced opacity
+      ..strokeWidth = 1.5 // Reduced stroke width
       ..style = PaintingStyle.stroke;
 
     canvas.translate(size.width / 2, size.height / 2);
@@ -459,18 +476,18 @@ class TribalPatternPainter extends CustomPainter {
       
       // Draw diamond shapes
       final path = Path();
-      path.moveTo(0, -100);
-      path.lineTo(50, -50);
+      path.moveTo(0, -80); // Reduced size
+      path.lineTo(40, -40);
       path.lineTo(0, 0);
-      path.lineTo(-50, -50);
+      path.lineTo(-40, -40);
       path.close();
       
       canvas.drawPath(path, paint);
       
       // Draw lines extending from diamonds
       canvas.drawLine(
-        const Offset(0, -100),
-        const Offset(0, -150),
+        const Offset(0, -80),
+        const Offset(0, -120), // Reduced size
         paint,
       );
       
@@ -478,11 +495,11 @@ class TribalPatternPainter extends CustomPainter {
     }
 
     // Draw concentric circles
-    for (int i = 1; i <= 3; i++) {
+    for (int i = 1; i <= 2; i++) { // Reduced circles
       canvas.drawCircle(
         Offset.zero,
-        i * 80.0,
-        paint..color = const Color(0xFFD4AF37).withOpacity(0.05),
+        i * 60.0, // Reduced size
+        paint..color = const Color(0xFFD4AF37).withOpacity(0.04),
       );
     }
   }

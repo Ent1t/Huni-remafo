@@ -21,6 +21,8 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
   late Animation<Offset> _slideAnimation;
   late Animation<double> _rotateAnimation;
 
+  String? selectedCategory; // Track selected category
+
   @override
   void initState() {
     super.initState();
@@ -106,10 +108,16 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
                       position: _slideAnimation,
                       child: Column(
                         children: [
-                          _buildTribeOverview(),
-                          _buildTribeStory(),
-                          _buildCategoryButtons(),
+                          // FIRST: Tribal elements at the very top
                           _buildTribalElements(),
+                          // SECOND: Categories (now smaller)
+                          _buildCategorySelection(),
+                          // THIRD: Show content based on selection
+                          selectedCategory == null 
+                            ? _buildTribeOverview()
+                            : _buildCategoryContent(selectedCategory!),
+                          // FOURTH: Tribe story
+                          _buildTribeStory(),
                           const SizedBox(height: 100),
                         ],
                       ),
@@ -143,7 +151,7 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
 
   Widget _buildSliverAppBar() {
     return SliverAppBar(
-      expandedHeight: 300.0,
+      expandedHeight: 250.0, // Reduced height to make room
       floating: false,
       pinned: true,
       backgroundColor: widget.tribe.color.withOpacity(0.9),
@@ -183,6 +191,22 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
         background: Stack(
           fit: StackFit.expand,
           children: [
+            // ==============================================
+            // BACKGROUND IMAGE PLACEHOLDER
+            // Replace this Container with your custom background image:
+            // 
+            // Example for assets:
+            // Image.asset(
+            //   'assets/images/ata_manobo_background.jpg',
+            //   fit: BoxFit.cover,
+            // ),
+            // 
+            // Example for network images:
+            // Image.network(
+            //   'https://your-url.com/ata_manobo_bg.jpg',
+            //   fit: BoxFit.cover,
+            // ),
+            // ==============================================
             Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
@@ -196,6 +220,19 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
                 ),
               ),
             ),
+            // Overlay for better text readability
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [
+                    Colors.black.withOpacity(0.1),
+                    Colors.black.withOpacity(0.3),
+                  ],
+                ),
+              ),
+            ),
             Center(
               child: AnimatedBuilder(
                 animation: _rotateAnimation,
@@ -203,14 +240,14 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
                   return Transform.rotate(
                     angle: _rotateAnimation.value * 0.1,
                     child: Container(
-                      width: 120,
-                      height: 120,
+                      width: 100,
+                      height: 100,
                       decoration: BoxDecoration(
                         border: Border.all(
                           color: Colors.white.withOpacity(0.3),
                           width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(60),
+                        borderRadius: BorderRadius.circular(50),
                       ),
                       child: CustomPaint(
                         painter: TribalSymbolPainter(Colors.white.withOpacity(0.4)),
@@ -226,13 +263,282 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
     );
   }
 
-  Widget _buildTribeOverview() {
+  // NEW POSITION: Tribal elements at the top
+  Widget _buildTribalElements() {
     return Container(
-      margin: const EdgeInsets.all(20),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.info,
+                color: const Color(0xFFD4AF37),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'TRIBE INFORMATION',
+                style: TextStyle(
+                  color: Color(0xFFD4AF37),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _buildTribalElement(
+                icon: Icons.location_on,
+                title: 'ORIGIN',
+                subtitle: _getTribeLocation(widget.tribe.name),
+                color: widget.tribe.color,
+              ),
+              _buildTribalElement(
+                icon: Icons.groups,
+                title: 'POPULATION',
+                subtitle: _getTribePopulation(widget.tribe.name),
+                color: widget.tribe.accentColor,
+              ),
+              _buildTribalElement(
+                icon: Icons.language,
+                title: 'LANGUAGE',
+                subtitle: widget.tribe.name,
+                color: const Color(0xFFD4AF37),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTribalElement({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Flexible(
+      child: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.black.withOpacity(0.3),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: color.withOpacity(0.3),
+            width: 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: color, size: 18),
+            const SizedBox(height: 4),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 0.5,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Colors.white, 
+                fontSize: 8,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // SMALLER Categories section
+  Widget _buildCategorySelection() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.explore,
+                color: const Color(0xFFD4AF37),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'EXPLORE CATEGORIES',
+                style: TextStyle(
+                  color: Color(0xFFD4AF37),
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          
+          // Horizontal scrollable smaller category buttons
+          SizedBox(
+            height: 70, // Much smaller height
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                // "Overview" category button
+                _buildSmallCategoryButton(
+                  'Overview', 
+                  Icons.info_outline, 
+                  null,
+                  isSelected: selectedCategory == null,
+                ),
+                const SizedBox(width: 8),
+                
+                // Individual category buttons
+                ...widget.tribe.categories.asMap().entries.map((entry) {
+                  int index = entry.key;
+                  String category = entry.value;
+                  return Row(
+                    children: [
+                      _buildSmallCategoryButton(
+                        category, 
+                        _getCategoryIcon(category), 
+                        index,
+                        isSelected: selectedCategory == category,
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                  );
+                }).toList(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSmallCategoryButton(String category, IconData icon, int? index, {bool isSelected = false}) {
+    final colors = [
+      const Color(0xFF8B4513),
+      const Color(0xFF2E8B57),
+      const Color(0xFFB8860B),
+      const Color(0xFF4682B4),
+    ];
+
+    final buttonColor = index != null ? colors[index % colors.length] : const Color(0xFFD4AF37);
+
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        setState(() {
+          selectedCategory = category == 'Overview' ? null : category;
+        });
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        width: 65, // Much smaller
+        height: 70, // Much smaller
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isSelected
+                ? [
+                    buttonColor,
+                    buttonColor.withOpacity(0.8),
+                  ]
+                : [
+                    buttonColor.withOpacity(0.6),
+                    buttonColor.withOpacity(0.4),
+                  ],
+          ),
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(
+            color: isSelected 
+                ? Colors.white.withOpacity(0.8)
+                : buttonColor.withOpacity(0.7),
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: buttonColor.withOpacity(0.4),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: buttonColor.withOpacity(0.2),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(isSelected ? 0.3 : 0.2),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Icon(
+                icon,
+                color: Colors.white,
+                size: 16, // Smaller icon
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              category.toUpperCase(),
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 8, // Smaller text
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                letterSpacing: 0.2,
+                shadows: const [
+                  Shadow(
+                    color: Colors.black26,
+                    offset: Offset(1, 1),
+                    blurRadius: 2,
+                  ),
+                ],
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryContent(String category) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.4),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.tribe.accentColor.withOpacity(0.3),
           width: 1,
@@ -240,8 +546,64 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
         boxShadow: [
           BoxShadow(
             color: widget.tribe.color.withOpacity(0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _getCategoryIcon(category),
+                color: widget.tribe.accentColor,
+                size: 20,
+              ),
+              const SizedBox(width: 10),
+              Text(
+                '${category.toUpperCase()} COLLECTION',
+                style: TextStyle(
+                  color: widget.tribe.accentColor,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            _getCategoryDescription(category, widget.tribe.name),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              height: 1.5,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTribeOverview() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.4),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: widget.tribe.accentColor.withOpacity(0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: widget.tribe.color.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -253,28 +615,28 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
               Icon(
                 Icons.info_outline,
                 color: widget.tribe.accentColor,
-                size: 24,
+                size: 20,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Text(
                 'ABOUT THE TRIBE',
                 style: TextStyle(
                   color: widget.tribe.accentColor,
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             _getTribeOverview(widget.tribe.name),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 16,
-              height: 1.6,
-              letterSpacing: 0.5,
+              fontSize: 14,
+              height: 1.5,
+              letterSpacing: 0.3,
             ),
           ),
         ],
@@ -284,11 +646,11 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
 
   Widget _buildTribeStory() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      padding: const EdgeInsets.all(24),
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: widget.tribe.color.withOpacity(0.5),
           width: 1,
@@ -302,234 +664,29 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
               Icon(
                 Icons.auto_stories,
                 color: widget.tribe.color,
-                size: 24,
+                size: 20,
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 10),
               Text(
                 'CULTURAL HERITAGE',
                 style: TextStyle(
                   color: widget.tribe.color,
-                  fontSize: 18,
+                  fontSize: 16,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 1,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 16),
           Text(
             _getTribeStory(widget.tribe.name),
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 15,
-              height: 1.7,
+              fontSize: 14,
+              height: 1.6,
               letterSpacing: 0.3,
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryButtons() {
-    return Container(
-      margin: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.explore,
-                color: const Color(0xFFD4AF37),
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              const Text(
-                'EXPLORE CATEGORIES',
-                style: TextStyle(
-                  color: Color(0xFFD4AF37),
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            childAspectRatio: 1.3,
-            crossAxisSpacing: 16,
-            mainAxisSpacing: 16,
-            children: widget.tribe.categories.asMap().entries.map((entry) {
-              int index = entry.key;
-              String category = entry.value;
-              return _buildCategoryButton(category, index);
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryButton(String category, int index) {
-    final colors = [
-      const Color(0xFF8B4513),
-      const Color(0xFF2E8B57),
-      const Color(0xFFB8860B),
-      const Color(0xFF4682B4),
-    ];
-
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
-        _navigateToCategory(category);
-      },
-      child: AnimatedContainer(
-        duration: Duration(milliseconds: 200 + (index * 50)),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              colors[index % colors.length].withOpacity(0.8),
-              colors[index % colors.length].withOpacity(0.6),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: colors[index % colors.length].withOpacity(0.7),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: colors[index % colors.length].withOpacity(0.3),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(15),
-              ),
-              child: Icon(
-                _getCategoryIcon(category),
-                color: Colors.white,
-                size: 32,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              category.toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-                shadows: [
-                  Shadow(
-                    color: Colors.black26,
-                    offset: Offset(1, 1),
-                    blurRadius: 2,
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                _getCategoryCount(category),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 10,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTribalElements() {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          _buildTribalElement(
-            icon: Icons.location_on,
-            title: 'ORIGIN',
-            subtitle: _getTribeLocation(widget.tribe.name),
-            color: widget.tribe.color,
-          ),
-          _buildTribalElement(
-            icon: Icons.groups,
-            title: 'POPULATION',
-            subtitle: _getTribePopulation(widget.tribe.name),
-            color: widget.tribe.accentColor,
-          ),
-          _buildTribalElement(
-            icon: Icons.language,
-            title: 'LANGUAGE',
-            subtitle: widget.tribe.name,
-            color: const Color(0xFFD4AF37),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTribalElement({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(icon, color: color, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            subtitle,
-            style: const TextStyle(color: Colors.white, fontSize: 11),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -542,6 +699,7 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
       case 'video': return Icons.videocam;
       case 'artifacts': return Icons.museum;
       case 'image': return Icons.image;
+      case 'overview': return Icons.info_outline;
       default: return Icons.category;
     }
   }
@@ -552,8 +710,24 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
       'Video': '8 items',
       'Artifacts': '25 items',
       'Image': '45 items',
+      'Overview': 'All info',
     };
     return counts[category] ?? '0 items';
+  }
+
+  String _getCategoryDescription(String category, String tribeName) {
+    switch (category.toLowerCase()) {
+      case 'music':
+        return 'Discover the traditional musical instruments, ceremonial songs, and rhythmic patterns of the $tribeName people. Each melody carries ancestral wisdom and cultural significance.';
+      case 'video':
+        return 'Watch authentic recordings of $tribeName ceremonies, dances, and cultural practices. These visual documentations preserve the living traditions.';
+      case 'artifacts':
+        return 'Explore the handcrafted tools, clothing, jewelry, and ceremonial objects that represent the material culture of the $tribeName tribe.';
+      case 'image':
+        return 'Browse through historical and contemporary photographs showcasing the $tribeName people, their homeland, and cultural expressions.';
+      default:
+        return 'Explore this category to learn more about $tribeName culture and heritage.';
+    }
   }
 
   String _getTribeOverview(String tribeName) {
@@ -598,32 +772,6 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
       case 'Mandaya': return '~80,000';
       default: return 'Unknown';
     }
-  }
-
-  void _navigateToCategory(String category) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: widget.tribe.color.withOpacity(0.9),
-        title: Row(
-          children: [
-            Icon(_getCategoryIcon(category), color: Colors.white),
-            const SizedBox(width: 12),
-            Text(category, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        content: Text(
-          'Opening ${widget.tribe.name} $category collection...',
-          style: const TextStyle(color: Colors.white),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Close', style: TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
   }
 }
 

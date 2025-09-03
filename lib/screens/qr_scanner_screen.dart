@@ -30,6 +30,9 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('QR Code Scanner'),
@@ -65,105 +68,164 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 4,
-            child: Stack(
-              children: [
-                // Camera preview
-                MobileScanner(
-                  controller: cameraController,
-                  onDetect: (capture) {
-                    if (!isScanning) return;
-                    
-                    final List<Barcode> barcodes = capture.barcodes;
-                    if (barcodes.isNotEmpty) {
-                      final barcode = barcodes.first;
-                      setState(() {
-                        barcodeResult = barcode.rawValue;
-                        isScanning = false;
-                        errorMessage = null;
-                      });
-                      
-                      // Show success dialog
-                      _showResultDialog(barcode.rawValue ?? 'No data');
-                    }
-                  },
-                ),
-                
-                // Scanning overlay
-                if (isScanning) _buildScanningOverlay(),
-              ],
-            ),
-          ),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          // Calculate available height
+          final appBarHeight = AppBar().preferredSize.height;
+          final statusBarHeight = MediaQuery.of(context).padding.top;
+          final bottomPadding = MediaQuery.of(context).padding.bottom;
+          final availableHeight = constraints.maxHeight;
           
-          // Bottom section with result and controls
-          Expanded(
-            flex: 1,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(16.0),
-              color: AppColors.sparklingSnow,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (barcodeResult != null) ...[
-                    const Icon(
-                      Icons.check_circle,
-                      color: Colors.green,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'QR Code Scanned Successfully!',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        color: Colors.green,
-                        fontWeight: FontWeight.bold,
+          return Column(
+            children: <Widget>[
+              // Camera preview section - FIXED HEIGHT
+              Expanded(
+                flex: 3,
+                child: Container(
+                  width: double.infinity,
+                  constraints: BoxConstraints(
+                    maxHeight: availableHeight * 0.7, // Max 70% of screen
+                  ),
+                  child: Stack(
+                    children: [
+                      // Camera preview
+                      ClipRect(
+                        child: OverflowBox(
+                          alignment: Alignment.center,
+                          child: FittedBox(
+                            fit: BoxFit.cover,
+                            child: Container(
+                              width: screenWidth,
+                              height: screenWidth, // Square aspect ratio
+                              child: MobileScanner(
+                                controller: cameraController,
+                                onDetect: (capture) {
+                                  if (!isScanning) return;
+                                  
+                                  final List<Barcode> barcodes = capture.barcodes;
+                                  if (barcodes.isNotEmpty) {
+                                    final barcode = barcodes.first;
+                                    setState(() {
+                                      barcodeResult = barcode.rawValue;
+                                      isScanning = false;
+                                      errorMessage = null;
+                                    });
+                                    
+                                    // Show success dialog
+                                    _showResultDialog(barcode.rawValue ?? 'No data');
+                                  }
+                                },
+                              ),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: _resetScanner,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.terrestrial,
-                        foregroundColor: AppColors.sparklingSnow,
-                      ),
-                      child: const Text('Scan Another'),
-                    ),
-                  ] else if (errorMessage != null) ...[
-                    const Icon(
-                      Icons.error_outline,
-                      color: Colors.red,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      errorMessage!,
-                      style: const TextStyle(color: Colors.red),
-                      textAlign: TextAlign.center,
-                    ),
-                  ] else ...[
-                    const Icon(
-                      Icons.qr_code_scanner,
-                      color: AppColors.terrestrial,
-                      size: 32,
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Point your camera at a QR code',
-                      style: TextStyle(
-                        color: AppColors.lavaStone,
-                        fontSize: 16,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ],
+                      
+                      // Scanning overlay
+                      if (isScanning) _buildScanningOverlay(),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        ],
+              
+              // Bottom section with result and controls - FIXED OVERFLOW
+              Container(
+                width: double.infinity,
+                constraints: BoxConstraints(
+                  maxHeight: availableHeight * 0.3, // Max 30% of screen
+                  minHeight: 120, // Minimum height
+                ),
+                padding: const EdgeInsets.all(16.0),
+                decoration: const BoxDecoration(
+                  color: AppColors.sparklingSnow,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (barcodeResult != null) ...[
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'QR Code Scanned Successfully!',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.green,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16, // Fixed size
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _resetScanner,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.terrestrial,
+                              foregroundColor: AppColors.sparklingSnow,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: const Text('Scan Another'),
+                          ),
+                        ),
+                      ] else if (errorMessage != null) ...[
+                        const Icon(
+                          Icons.error_outline,
+                          color: Colors.red,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          errorMessage!,
+                          style: const TextStyle(
+                            color: Colors.red,
+                            fontSize: 14,
+                          ),
+                          textAlign: TextAlign.center,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ] else ...[
+                        const Icon(
+                          Icons.qr_code_scanner,
+                          color: AppColors.terrestrial,
+                          size: 32,
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Point your camera at a QR code',
+                          style: TextStyle(
+                            color: AppColors.lavaStone,
+                            fontSize: 14, // Fixed size
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Make sure the QR code is well-lit and centered',
+                          style: TextStyle(
+                            color: AppColors.lavaStone,
+                            fontSize: 12,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -173,10 +235,10 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       decoration: const ShapeDecoration(
         shape: QrScannerOverlayShape(
           borderColor: AppColors.terrestrial,
-          borderRadius: 10,
+          borderRadius: 12,
           borderLength: 30,
-          borderWidth: 10,
-          cutOutSize: 250,
+          borderWidth: 8, // Reduced border width
+          cutOutSize: 220, // Reduced cut out size
         ),
       ),
     );
@@ -188,31 +250,33 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('QR Code Result'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.qr_code,
-                size: 64,
-                color: AppColors.terrestrial,
-              ),
-              const SizedBox(height: 16),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: AppColors.candiedSnow,
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppColors.murmur),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.qr_code,
+                  size: 64,
+                  color: AppColors.terrestrial,
                 ),
-                child: SelectableText(
-                  result,
-                  style: const TextStyle(
-                    fontFamily: 'monospace',
-                    fontSize: 14,
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.candiedSnow,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.murmur),
+                  ),
+                  child: SelectableText(
+                    result,
+                    style: const TextStyle(
+                      fontFamily: 'monospace',
+                      fontSize: 14,
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -254,7 +318,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
   }
 }
 
-// Custom overlay shape for QR scanner
+// Custom overlay shape for QR scanner - OPTIMIZED
 class QrScannerOverlayShape extends ShapeBorder {
   const QrScannerOverlayShape({
     this.borderColor = Colors.red,
@@ -302,8 +366,8 @@ class QrScannerOverlayShape extends ShapeBorder {
   void paint(Canvas canvas, Rect rect, {TextDirection? textDirection}) {
     final width = rect.width;
     final height = rect.height;
-    final cutOutWidth = cutOutSize < width ? cutOutSize : width - borderWidth;
-    final cutOutHeight = cutOutSize < height ? cutOutSize : height - borderWidth;
+    final cutOutWidth = cutOutSize < width ? cutOutSize : width - borderWidth * 2;
+    final cutOutHeight = cutOutSize < height ? cutOutSize : height - borderWidth * 2;
 
     final backgroundPath = Path()
       ..addRect(rect)
@@ -332,18 +396,25 @@ class QrScannerOverlayShape extends ShapeBorder {
       ..strokeWidth = borderWidth;
 
     final path = Path()
+      // Top-left corner
       ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
       ..lineTo(rect.center.dx - cutOutWidth / 2 + borderLength, rect.center.dy - cutOutHeight / 2)
       ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
       ..lineTo(rect.center.dx - cutOutWidth / 2, rect.center.dy - cutOutHeight / 2 + borderLength)
+      
+      // Top-right corner
       ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
       ..lineTo(rect.center.dx + cutOutWidth / 2 - borderLength, rect.center.dy - cutOutHeight / 2)
       ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy - cutOutHeight / 2)
       ..lineTo(rect.center.dx + cutOutWidth / 2, rect.center.dy - cutOutHeight / 2 + borderLength)
+      
+      // Bottom-left corner
       ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
       ..lineTo(rect.center.dx - cutOutWidth / 2 + borderLength, rect.center.dy + cutOutHeight / 2)
       ..moveTo(rect.center.dx - cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
       ..lineTo(rect.center.dx - cutOutWidth / 2, rect.center.dy + cutOutHeight / 2 - borderLength)
+      
+      // Bottom-right corner
       ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
       ..lineTo(rect.center.dx + cutOutWidth / 2 - borderLength, rect.center.dy + cutOutHeight / 2)
       ..moveTo(rect.center.dx + cutOutWidth / 2, rect.center.dy + cutOutHeight / 2)
