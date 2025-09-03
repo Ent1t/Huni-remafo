@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:math' as math;
 import 'tribes_screen.dart'; // Import to use TribeData
+import 'category_detail_screen.dart';
 
 class TribeDetailsScreen extends StatefulWidget {
   final TribeData tribe;
@@ -434,103 +435,118 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
   }
 
   Widget _buildSmallCategoryButton(String category, IconData icon, int? index, {bool isSelected = false}) {
-    final colors = [
-      const Color(0xFF8B4513),
-      const Color(0xFF2E8B57),
-      const Color(0xFFB8860B),
-      const Color(0xFF4682B4),
-    ];
+  final colors = [
+    const Color(0xFF8B4513),
+    const Color(0xFF2E8B57),
+    const Color(0xFFB8860B),
+    const Color(0xFF4682B4),
+  ];
 
-    final buttonColor = index != null ? colors[index % colors.length] : const Color(0xFFD4AF37);
+  final buttonColor = index != null ? colors[index % colors.length] : const Color(0xFFD4AF37);
 
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.mediumImpact();
+  return GestureDetector(
+    onTap: () {
+      HapticFeedback.mediumImpact();
+      
+      if (category == 'Overview') {
+        // Show overview
         setState(() {
-          selectedCategory = category == 'Overview' ? null : category;
+          selectedCategory = null;
         });
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        width: 65, // Much smaller
-        height: 70, // Much smaller
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isSelected
-                ? [
-                    buttonColor,
-                    buttonColor.withOpacity(0.8),
-                  ]
-                : [
-                    buttonColor.withOpacity(0.6),
-                    buttonColor.withOpacity(0.4),
-                  ],
+      } else {
+        // Navigate to category detail screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => CategoryDetailScreen(
+              tribe: widget.tribe,
+              category: category,
+            ),
           ),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected 
-                ? Colors.white.withOpacity(0.8)
-                : buttonColor.withOpacity(0.7),
-            width: isSelected ? 2 : 1,
-          ),
-          boxShadow: isSelected
+        );
+      }
+    },
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      width: 65,
+      height: 70,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isSelected
               ? [
-                  BoxShadow(
-                    color: buttonColor.withOpacity(0.4),
-                    blurRadius: 8,
-                    offset: const Offset(0, 4),
-                  ),
+                  buttonColor,
+                  buttonColor.withOpacity(0.8),
                 ]
               : [
-                  BoxShadow(
-                    color: buttonColor.withOpacity(0.2),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
+                  buttonColor.withOpacity(0.6),
+                  buttonColor.withOpacity(0.4),
                 ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(6),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(isSelected ? 0.3 : 0.2),
-                borderRadius: BorderRadius.circular(6),
-              ),
-              child: Icon(
-                icon,
-                color: Colors.white,
-                size: 16, // Smaller icon
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              category.toUpperCase(),
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 8, // Smaller text
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-                letterSpacing: 0.2,
-                shadows: const [
-                  Shadow(
-                    color: Colors.black26,
-                    offset: Offset(1, 1),
-                    blurRadius: 2,
-                  ),
-                ],
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isSelected 
+              ? Colors.white.withOpacity(0.8)
+              : buttonColor.withOpacity(0.7),
+          width: isSelected ? 2 : 1,
         ),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: buttonColor.withOpacity(0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: buttonColor.withOpacity(0.2),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
       ),
-    );
-  }
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(isSelected ? 0.3 : 0.2),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 16,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            category.toUpperCase(),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 8,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+              letterSpacing: 0.2,
+              shadows: const [
+                Shadow(
+                  color: Colors.black26,
+                  offset: Offset(1, 1),
+                  blurRadius: 2,
+                ),
+              ],
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    ),
+  );
+}
 
   Widget _buildCategoryContent(String category) {
     return Container(
