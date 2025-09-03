@@ -75,6 +75,11 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final safeAreaTop = MediaQuery.of(context).padding.top;
+    final safeAreaBottom = MediaQuery.of(context).padding.bottom;
+    
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -96,45 +101,58 @@ class _HomeScreenState extends State<HomeScreen>
             // Floating particles effect
             _buildFloatingParticles(),
             
-            // Main content - FIXED OVERFLOW
+            // Main content - COMPLETELY FIXED OVERFLOW
             SafeArea(
-              child: SingleChildScrollView(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(
-                    minHeight: MediaQuery.of(context).size.height - 
-                              MediaQuery.of(context).padding.top - 
-                              MediaQuery.of(context).padding.bottom - 70, // Bottom nav height
-                  ),
-                  child: Column(
-                    children: [
-                      // App title with tribal styling
-                      _buildTribalHeader(),
-                      
-                      // Main content area
-                      Expanded(
-                        flex: 0, // Don't expand infinitely
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  // Calculate available space more precisely
+                  final availableHeight = constraints.maxHeight;
+                  final bottomNavSpace = 50.0; // Compact nav height
+                  final workingHeight = availableHeight - bottomNavSpace;
+                  
+                  return SingleChildScrollView(
+                    physics: const ClampingScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: workingHeight,
+                      ),
+                      child: IntrinsicHeight(
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            // Main QR scanner button
-                            _buildMainQRButton(context),
+                            // App title with tribal styling - RESPONSIVE
+                            _buildTribalHeader(screenWidth),
                             
-                            const SizedBox(height: 30), // Reduced spacing
+                            // Main content area - FLEXIBLE SPACING
+                            Expanded(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    // Main QR scanner button - RESPONSIVE SIZE
+                                    _buildMainQRButton(context, screenWidth, screenHeight),
+                                    
+                                    // Flexible spacing
+                                    SizedBox(height: screenHeight * 0.03), // 3% of screen height
+                                    
+                                    // Subtitle with cultural context - COMPACT
+                                    _buildSubtitle(screenWidth),
+                                  ],
+                                ),
+                              ),
+                            ),
                             
-                            // Subtitle with cultural context
-                            _buildSubtitle(),
+                            // Bottom hint - FIXED AT BOTTOM
+                            _buildBottomHint(screenWidth),
+                            
+                            // Safe bottom padding
+                            SizedBox(height: math.max(20, safeAreaBottom + 10)),
                           ],
                         ),
                       ),
-                      
-                      // Bottom navigation hint - FIXED POSITIONING
-                      _buildBottomHint(),
-                      
-                      // Add some bottom padding for the bottom nav
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
+                    ),
+                  );
+                },
               ),
             ),
           ],
@@ -163,10 +181,10 @@ class _HomeScreenState extends State<HomeScreen>
         animation: _floatAnimation,
         builder: (context, child) {
           return Stack(
-            children: List.generate(6, (index) { // Reduced from 8
+            children: List.generate(6, (index) {
               return Positioned(
                 left: (index * 60.0) % MediaQuery.of(context).size.width,
-                top: 100 + (index * 100.0) + _floatAnimation.value,
+                top: 100 + (index * 80.0) + _floatAnimation.value, // Reduced spacing
                 child: Opacity(
                   opacity: 0.3,
                   child: Container(
@@ -186,15 +204,26 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildTribalHeader() {
+  Widget _buildTribalHeader(double screenWidth) {
+    // Make header size responsive to screen width
+    final isSmallScreen = screenWidth < 360;
+    final titleFontSize = isSmallScreen ? 24.0 : 28.0;
+    final subtitleFontSize = isSmallScreen ? 10.0 : 12.0;
+    final lineWidth = isSmallScreen ? 100.0 : 120.0;
+    final verticalSpacing = isSmallScreen ? 12.0 : 16.0;
+    
     return Padding(
-      padding: const EdgeInsets.all(20.0),
+      padding: EdgeInsets.symmetric(
+        horizontal: screenWidth * 0.05, // 5% of screen width
+        vertical: 15.0, // Reduced vertical padding
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           // Decorative tribal line
           Container(
             height: 3,
-            width: 120, // Reduced width
+            width: lineWidth,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
@@ -207,49 +236,56 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
           
-          const SizedBox(height: 16), // Reduced spacing
+          SizedBox(height: verticalSpacing * 0.75),
           
-          // App title - RESPONSIVE TEXT SIZE
+          // App title - FULLY RESPONSIVE
           FittedBox(
             fit: BoxFit.scaleDown,
-            child: ShaderMask(
-              shaderCallback: (bounds) => const LinearGradient(
-                colors: [
-                  Color(0xFFD4AF37),
-                  Color(0xFFFFD700),
-                  Color(0xFFB8860B),
-                ],
-              ).createShader(bounds),
-              child: const Text(
-                'HUNI SA TRIBU',
-                style: TextStyle(
-                  fontSize: 28, // Reduced from 32
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 2,
-                  color: Colors.white,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: screenWidth * 0.9, // Max 90% of screen width
+              ),
+              child: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  colors: [
+                    Color(0xFFD4AF37),
+                    Color(0xFFFFD700),
+                    Color(0xFFB8860B),
+                  ],
+                ).createShader(bounds),
+                child: Text(
+                  'HUNI SA TRIBU',
+                  style: TextStyle(
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: isSmallScreen ? 1.5 : 2,
+                    color: Colors.white,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ),
           ),
           
-          const SizedBox(height: 6), // Reduced spacing
+          SizedBox(height: verticalSpacing * 0.4),
           
-          const Text(
+          Text(
             'Cultural Heritage Museum',
             style: TextStyle(
-              fontSize: 12, // Reduced from 14
-              color: Color(0xFFB8B8B8),
-              letterSpacing: 1.5,
+              fontSize: subtitleFontSize,
+              color: const Color(0xFFB8B8B8),
+              letterSpacing: isSmallScreen ? 1.0 : 1.5,
               fontWeight: FontWeight.w300,
             ),
+            textAlign: TextAlign.center,
           ),
           
-          const SizedBox(height: 16), // Reduced spacing
+          SizedBox(height: verticalSpacing * 0.75),
           
           // Decorative tribal line
           Container(
             height: 3,
-            width: 120, // Reduced width
+            width: lineWidth,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [
@@ -266,7 +302,15 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildMainQRButton(BuildContext context) {
+  Widget _buildMainQRButton(BuildContext context, double screenWidth, double screenHeight) {
+    // Make button size responsive to screen size
+    final isSmallScreen = screenWidth < 360 || screenHeight < 650;
+    final buttonSize = isSmallScreen ? 200.0 : 240.0;
+    final iconSize = isSmallScreen ? 60.0 : 70.0;
+    final scanFontSize = isSmallScreen ? 20.0 : 24.0;
+    final qrFontSize = isSmallScreen ? 12.0 : 14.0;
+    final marginSize = isSmallScreen ? 15.0 : 18.0;
+    
     return AnimatedBuilder(
       animation: _pulseAnimation,
       builder: (context, child) {
@@ -296,8 +340,8 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
             child: Container(
-              width: 240, // Reduced from 280
-              height: 240, // Reduced from 280
+              width: buttonSize,
+              height: buttonSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -310,13 +354,13 @@ class _HomeScreenState extends State<HomeScreen>
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFD4AF37).withOpacity(0.3),
-                    blurRadius: 25, // Reduced shadow
+                    blurRadius: isSmallScreen ? 20 : 25,
                     spreadRadius: 4,
                   ),
                 ],
               ),
               child: Container(
-                margin: const EdgeInsets.all(18), // Reduced margin
+                margin: EdgeInsets.all(marginSize),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: const Color(0xFF2D5A3D).withOpacity(0.9),
@@ -325,30 +369,30 @@ class _HomeScreenState extends State<HomeScreen>
                     width: 3,
                   ),
                 ),
-                child: const Column(
+                child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
                       Icons.qr_code_scanner,
-                      size: 70, // Reduced from 80
-                      color: Color(0xFFD4AF37),
+                      size: iconSize,
+                      color: const Color(0xFFD4AF37),
                     ),
-                    SizedBox(height: 16), // Reduced spacing
+                    SizedBox(height: isSmallScreen ? 12 : 16),
                     Text(
                       'SCAN',
                       style: TextStyle(
-                        color: Color(0xFFD4AF37),
-                        fontSize: 24, // Reduced from 28
+                        color: const Color(0xFFD4AF37),
+                        fontSize: scanFontSize,
                         fontWeight: FontWeight.bold,
-                        letterSpacing: 3,
+                        letterSpacing: isSmallScreen ? 2 : 3,
                       ),
                     ),
-                    SizedBox(height: 6), // Reduced spacing
+                    SizedBox(height: isSmallScreen ? 4 : 6),
                     Text(
                       'QR CODE',
                       style: TextStyle(
-                        color: Color(0xFFB8B8B8),
-                        fontSize: 14, // Reduced from 16
+                        color: const Color(0xFFB8B8B8),
+                        fontSize: qrFontSize,
                         letterSpacing: 1.5,
                       ),
                     ),
@@ -362,45 +406,51 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildSubtitle() {
+  Widget _buildSubtitle(double screenWidth) {
+    final isSmallScreen = screenWidth < 360;
+    final titleFontSize = isSmallScreen ? 16.0 : 18.0;
+    final bodyFontSize = isSmallScreen ? 12.0 : 14.0;
+    final horizontalPadding = screenWidth * 0.08; // 8% of screen width
+    
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 30), // Reduced padding
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const Text(
+          Text(
             'Discover Indigenous Heritage',
             style: TextStyle(
-              color: Color(0xFFD4AF37),
-              fontSize: 18, // Reduced from 20
+              color: const Color(0xFFD4AF37),
+              fontSize: titleFontSize,
               fontWeight: FontWeight.w600,
               letterSpacing: 0.8,
             ),
             textAlign: TextAlign.center,
           ),
           
-          const SizedBox(height: 12), // Reduced spacing
+          SizedBox(height: isSmallScreen ? 10 : 12),
           
-          const Text(
+          Text(
             'Scan QR codes on museum exhibits to explore\nthe rich culture of indigenous tribes',
             style: TextStyle(
-              color: Color(0xFFB8B8B8),
-              fontSize: 14, // Reduced from 16
+              color: const Color(0xFFB8B8B8),
+              fontSize: bodyFontSize,
               height: 1.4,
               letterSpacing: 0.3,
             ),
             textAlign: TextAlign.center,
           ),
           
-          const SizedBox(height: 20), // Reduced spacing
+          SizedBox(height: isSmallScreen ? 16 : 20),
           
-          // Decorative dots
+          // Decorative dots - RESPONSIVE
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(5, (index) {
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: 6, // Reduced size
-                height: 6,
+                width: isSmallScreen ? 5 : 6,
+                height: isSmallScreen ? 5 : 6,
                 decoration: BoxDecoration(
                   color: const Color(0xFFD4AF37).withOpacity(0.6),
                   shape: BoxShape.circle,
@@ -413,37 +463,46 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildBottomHint() {
+  Widget _buildBottomHint(double screenWidth) {
+    final isSmallScreen = screenWidth < 360;
+    final fontSize = isSmallScreen ? 11.0 : 12.0;
+    final iconSize = isSmallScreen ? 16.0 : 18.0;
+    final horizontalPadding = screenWidth * 0.05; // 5% of screen width
+    
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20), // Removed vertical padding
+      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), // Reduced padding
+        padding: EdgeInsets.symmetric(
+          horizontal: isSmallScreen ? 12 : 16, 
+          vertical: isSmallScreen ? 8 : 10,
+        ),
         decoration: BoxDecoration(
           color: const Color(0xFF2D5A3D).withOpacity(0.8),
-          borderRadius: BorderRadius.circular(16), // Reduced radius
+          borderRadius: BorderRadius.circular(isSmallScreen ? 14 : 16),
           border: Border.all(
             color: const Color(0xFFD4AF37).withOpacity(0.3),
             width: 1,
           ),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
               Icons.swipe_up,
-              color: Color(0xFFD4AF37),
-              size: 18, // Reduced size
+              color: const Color(0xFFD4AF37),
+              size: iconSize,
             ),
-            SizedBox(width: 6),
+            const SizedBox(width: 6),
             Flexible(
               child: Text(
                 'Explore more in Tribes section',
                 style: TextStyle(
-                  color: Color(0xFFB8B8B8),
-                  fontSize: 12, // Reduced from 14
+                  color: const Color(0xFFB8B8B8),
+                  fontSize: fontSize,
                 ),
                 overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
           ],
@@ -453,7 +512,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 }
 
-// Custom painter for tribal patterns
+// Custom painter for tribal patterns - OPTIMIZED
 class TribalPatternPainter extends CustomPainter {
   final double rotation;
   
@@ -462,44 +521,44 @@ class TribalPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFFD4AF37).withOpacity(0.08) // Reduced opacity
-      ..strokeWidth = 1.5 // Reduced stroke width
+      ..color = const Color(0xFFD4AF37).withOpacity(0.06) // Reduced opacity
+      ..strokeWidth = 1.2 // Slightly reduced stroke
       ..style = PaintingStyle.stroke;
 
     canvas.translate(size.width / 2, size.height / 2);
     canvas.rotate(rotation);
 
-    // Draw tribal geometric patterns
+    // Draw fewer, smaller tribal geometric patterns
     for (int i = 0; i < 6; i++) {
       canvas.save();
       canvas.rotate(i * math.pi / 3);
       
-      // Draw diamond shapes
+      // Draw diamond shapes - SMALLER
       final path = Path();
-      path.moveTo(0, -80); // Reduced size
-      path.lineTo(40, -40);
+      path.moveTo(0, -60); // Reduced from -80
+      path.lineTo(30, -30); // Reduced from 40, -40
       path.lineTo(0, 0);
-      path.lineTo(-40, -40);
+      path.lineTo(-30, -30); // Reduced from -40, -40
       path.close();
       
       canvas.drawPath(path, paint);
       
-      // Draw lines extending from diamonds
+      // Draw shorter lines extending from diamonds
       canvas.drawLine(
-        const Offset(0, -80),
-        const Offset(0, -120), // Reduced size
+        const Offset(0, -60),
+        const Offset(0, -90), // Reduced from -120
         paint,
       );
       
       canvas.restore();
     }
 
-    // Draw concentric circles
-    for (int i = 1; i <= 2; i++) { // Reduced circles
+    // Draw fewer concentric circles
+    for (int i = 1; i <= 2; i++) {
       canvas.drawCircle(
         Offset.zero,
-        i * 60.0, // Reduced size
-        paint..color = const Color(0xFFD4AF37).withOpacity(0.04),
+        i * 50.0, // Reduced from 60
+        paint..color = const Color(0xFFD4AF37).withOpacity(0.03),
       );
     }
   }
