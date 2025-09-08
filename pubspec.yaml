@@ -13,6 +13,7 @@ dependencies:
   flutter_tts: ^4.0.2      # 👈 NEW: Text-to-speech
   audioplayers: ^6.0.0    # 👈 NEW: Audio playback
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -26,3 +27,5 @@ flutter:
     - assets/images/
     - assets/audio/
     - assets/videos/
+    - assets/artifacts/
+    

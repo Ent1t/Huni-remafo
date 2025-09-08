@@ -315,7 +315,7 @@ class _CategoryDetailScreenState extends State<CategoryDetailScreen>
   Widget _buildFilterTabs() {
     final filters = _getFiltersForCategory(widget.category);
     
-    return Container(
+    return SizedBox(
       height: 45,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,

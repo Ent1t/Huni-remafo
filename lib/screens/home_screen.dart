@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen>
                 builder: (context, constraints) {
                   // Calculate available space more precisely
                   final availableHeight = constraints.maxHeight;
-                  final bottomNavSpace = 50.0; // Compact nav height
+                  const bottomNavSpace = 50.0; // Compact nav height
                   final workingHeight = availableHeight - bottomNavSpace;
                   
                   return SingleChildScrollView(
