@@ -12,6 +12,7 @@ dependencies:
   mobile_scanner: ^7.0.1
   flutter_tts: ^4.0.2      # 👈 NEW: Text-to-speech
   audioplayers: ^6.0.0    # 👈 NEW: Audio playback
+  http: ^1.5.0            # 👈 NEW: HTTP requests 
 
 
 dev_dependencies:

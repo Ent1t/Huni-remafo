@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import '../utils/app_colors.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../config.dart';
 
 class QRScannerScreen extends StatefulWidget {
   const QRScannerScreen({super.key});
@@ -94,7 +97,7 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
                           alignment: Alignment.center,
                           child: FittedBox(
                             fit: BoxFit.cover,
-                            child: Container(
+                            child: SizedBox(
                               width: screenWidth,
                               height: screenWidth, // Square aspect ratio
                               child: MobileScanner(
@@ -244,7 +247,11 @@ class _QRScannerScreenState extends State<QRScannerScreen> {
     );
   }
 
-  void _showResultDialog(String result) {
+  Future <void> _showResultDialog(String result) async {
+    http.Response response = await http.post(Uri.parse("${Config.baseUrl}scan/"),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({"code": result}));
+
     showDialog(
       context: context,
       builder: (BuildContext context) {

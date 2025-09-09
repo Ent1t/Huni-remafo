@@ -271,15 +271,15 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.info,
-                color: const Color(0xFFD4AF37),
+                color: Color(0xFFD4AF37),
                 size: 18,
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'TRIBE INFORMATION',
                 style: TextStyle(
                   color: Color(0xFFD4AF37),
@@ -374,15 +374,15 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          const Row(
             children: [
               Icon(
                 Icons.explore,
-                color: const Color(0xFFD4AF37),
+                color: Color(0xFFD4AF37),
                 size: 18,
               ),
-              const SizedBox(width: 8),
-              const Text(
+              SizedBox(width: 8),
+              Text(
                 'EXPLORE CATEGORIES',
                 style: TextStyle(
                   color: Color(0xFFD4AF37),
@@ -425,7 +425,7 @@ class _TribeDetailsScreenState extends State<TribeDetailsScreen>
                       const SizedBox(width: 8),
                     ],
                   );
-                }).toList(),
+                }),
               ],
             ),
           ),
